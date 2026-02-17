@@ -12,7 +12,10 @@ from .coordinator import SiePomagaCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SiePomaga from a config entry."""
     coordinator = SiePomagaCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:  # first refresh can fail (network, parse); coordinator will retry
+        pass
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator

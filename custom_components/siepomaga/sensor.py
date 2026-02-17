@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date as date_type
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -137,7 +138,10 @@ class SiePomagaFundraiserSensor(CoordinatorEntity[SiePomagaCoordinator], SensorE
         data = self.coordinator.data
         if data is None:
             return None
-        return getattr(data, self._data_attr)
+        value = getattr(data, self._data_attr)
+        if isinstance(value, date_type):
+            return value.isoformat()
+        return value
 
     @property
     def extra_state_attributes(self) -> dict:

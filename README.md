@@ -34,18 +34,80 @@ Custom integration for Home Assistant to track fundraising campaigns from [SiePo
 2. W HACS wyszukaj **SiePomaga** → **Download** → restart HA.
 3. **Ustawienia → Urządzenia i usługi → Dodaj integrację → SiePomaga** → wklej slug/URL zbiórki.
 
-### Ikona w HACS / na liście integracji
+### Ikona w HACS / na liście integracji (Home Assistant Brands)
 
-Ikona w HACS i w HA pochodzi z repozytorium [Home Assistant Brands](https://github.com/home-assistant/brands). W tym repo są już pliki **icon.png** (256×256) i **icon@2x.png** (512×512).
+Ikona w HACS i w HA jest serwowana z repozytorium [home-assistant/brands](https://github.com/home-assistant/brands). W **tym** repo (siepomaga) masz już pliki **icon.png** (256×256) i **icon@2x.png** (512×512). Żeby ikona pojawiła się w interfejsie, musisz dodać je do repozytorium Brands — krok po kroku:
 
-Aby ikona pojawiła się na liście integracji w HACS i w HA:
+---
 
-1. Zrób fork [home-assistant/brands](https://github.com/home-assistant/brands).
-2. W forku utwórz katalog `custom_integrations/siepomaga/`.
-3. Skopiuj z tego repo pliki `icon.png` i `icon@2x.png` do `custom_integrations/siepomaga/`.
-4. Otwórz Pull Request do repozytorium `home-assistant/brands`.
+#### Krok 1: Zaloguj się na GitHub
 
-Po zaakceptowaniu PR ikona będzie dostępna pod `https://brands.home-assistant.io/siepomaga/icon.png` i pojawi się w HACS/HA (może być potrzebny czas na aktualizację cache).
+- Wejdź na [github.com](https://github.com) i zaloguj się na swoje konto.
+
+#### Krok 2: Zrób fork repozytorium Brands
+
+- Otwórz: **[https://github.com/home-assistant/brands](https://github.com/home-assistant/brands)**  
+- Kliknij przycisk **„Fork”** (prawy górny róg).  
+- GitHub utworzy kopię repozytorium pod Twoim kontem (np. `https://github.com/TWOJ_LOGIN/brands`).
+
+#### Krok 3: Otwórz fork na swoim koncie
+
+- Wejdź w **swoje** repozytorium (np. **Your username / brands**).  
+- Upewnij się, że jesteś na gałęzi **master** (dropdown „Branch” u góry).
+
+#### Krok 4: Utwórz folder dla integracji
+
+- Kliknij folder **`custom_integrations`**.  
+- Kliknij **„Add file”** → **„Create new file”**.  
+- W ścieżce pliku wpisz: **`custom_integrations/siepomaga/icon.png`** (nazwa folderu `siepomaga` i pliku `icon.png`).  
+- Na razie **nie wklejaj** jeszcze obrazka — najpierw usuń ścieżkę i utwórz sam folder:
+  - Zamiast tego w górnym pasku ścieżki kliknij **`custom_integrations`**, wróć do widoku folderów.
+  - W polu „Name your file...” wpisz: **`siepomaga/icon.png`** — GitHub utworzy folder `siepomaga` przy dodaniu pliku.
+
+*Prostsza metoda:* na swoim komputerze sklonuj swój fork, dodaj pliki lokalnie i wypchnij zmiany (patrz Krok 5 alternatywa).
+
+#### Krok 5: Dodaj pliki ikon
+
+**Opcja A — przez przeglądarkę (dla jednego pliku):**
+
+- W forku: **custom_integrations** → **„Add file”** → **„Upload files”**.  
+- Utwórz folder: w nazwie pliku podaj **`siepomaga/icon.png`** (możesz przeciągnąć plik **icon.png** z tego repo).  
+- Potem dodaj drugi plik **icon@2x.png** w ten sam folder **siepomaga** („Upload files” → **siepomaga/icon@2x.png**).  
+- Na dole strony wpisz tytuł commita (np. **Add SiePomaga integration icon**) i kliknij **„Commit changes”**.
+
+**Opcja B — na komputerze (git):**
+
+```bash
+git clone https://github.com/TWOJ_LOGIN/brands.git
+cd brands
+mkdir -p custom_integrations/siepomaga
+cp /ścieżka/do/siepomaga/icon.png custom_integrations/siepomaga/
+cp /ścieżka/do/siepomaga/icon@2x.png custom_integrations/siepomaga/
+git add custom_integrations/siepomaga/
+git commit -m "Add SiePomaga integration icon"
+git push origin master
+```
+
+(Zamień `TWOJ_LOGIN` na swój login GitHub i `/ścieżka/do/siepomaga/` na folder z tym repozytorium, gdzie leżą `icon.png` i `icon@2x.png`.)
+
+#### Krok 6: Otwórz Pull Request
+
+- Wejdź na **swoj** fork: `https://github.com/TWOJ_LOGIN/brands`.  
+- GitHub często pokazuje żółty pasek: **„Compare & pull request”** — kliknij go.  
+- Jeśli nie: idź na [github.com/home-assistant/brands](https://github.com/home-assistant/brands) → zakładka **„Pull requests”** → **„New pull request”** → **„compare across forks”** → base: **home-assistant/brands**, compare: **TWOJ_LOGIN/brands**, branch **master**.  
+- Tytuł np.: **Add SiePomaga integration icon**.  
+- W opisie możesz napisać: „Add icon for custom integration SiePomaga (siepomaga.pl).”  
+- Kliknij **„Create pull request”**.
+
+#### Krok 7: Po zaakceptowaniu PR
+
+- Maintainerzy Home Assistant zmergują PR.  
+- Ikona będzie dostępna pod: **https://brands.home-assistant.io/siepomaga/icon.png**  
+- W HACS i w HA ikona może pojawić się z opóźnieniem (cache do ok. 24 h).
+
+---
+
+**Wymagania dla ikon (zgodnie z [brands README](https://github.com/home-assistant/brands)):** PNG, 256×256 (`icon.png`), 512×512 (`icon@2x.png`), proporcje 1:1. Pliki w tym repo już to spełniają.
 
 ### Manual
 
@@ -70,9 +132,17 @@ Additional sensors:
 - `Rozpoczęcie` (date)
 - `Zakończenie` (date)
 
-### Options
+### Gdzie są ustawienia pluginu (opcje)
 
-You can change the refresh interval in the integration options (`scan_interval`, seconds).
+Możesz zmienić **interwał odświeżania** (np. co 300 sekund) w opcjach integracji. Żeby otworzyć okno ustawień:
+
+1. Wejdź w **Ustawienia** → **Urządzenia i usługi**.
+2. Znajdź na liście **SiePomaga** (możesz wyszukać po „SiePomaga”).
+3. Kliknij **w wiersz z wpisem** (np. **„SiePomaga: pawelek-pokropek”**), nie w samą nazwę integracji u góry.
+4. Otworzy się strona urządzenia; u góry lub w menu (⋮) wybierz **„Konfiguruj”** / **„Configure”**.
+5. Pojawi się okno z polem **„Częstotliwość odświeżania (sekundy)”** — wpisz np. `300` i zapisz.
+
+Jeśli nie widzisz **„Konfiguruj”**: na stronie integracji (po kliknięciu „SiePomaga”) spróbuj kliknąć **ikony zębatki** przy wpisie albo **trzy kropki (⋮)** i wybrać opcję konfiguracji.
 
 ## Development notes
 

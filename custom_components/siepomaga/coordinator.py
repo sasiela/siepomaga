@@ -118,7 +118,8 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
         self.entry = entry
         self.slug: str = entry.data[CONF_SLUG]
         self.url: str = entry.data[CONF_URL]
-        scan_interval = int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        options = entry.options or {}
+        scan_interval = int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
         super().__init__(
             hass,
@@ -131,14 +132,17 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
         session = async_get_clientsession(self.hass)
 
         try:
-            async with asyncio.timeout(20):
-                resp = await session.get(
-                    self.url,
-                    headers={"User-Agent": USER_AGENT},
-                )
-                resp.raise_for_status()
-                text = await resp.text()
+            resp = await asyncio.wait_for(
+                session.get(self.url, headers={"User-Agent": USER_AGENT}),
+                timeout=20.0,
+            )
+            resp.raise_for_status()
+            text = await resp.text()
+        except asyncio.TimeoutError as err:
+            _LOGGER.warning("Timeout loading %s", self.url)
+            raise UpdateFailed(f"Timeout loading {self.url}") from err
         except Exception as err:
+            _LOGGER.warning("Request failed for %s: %s", self.url, err)
             raise UpdateFailed(f"Request failed: {err}") from err
 
         # Find raised + percent.
@@ -158,6 +162,10 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
                 break
 
         if raised is None:
+            _LOGGER.debug(
+                "No 'zł(percent)' line found for %s; trying plain 'zł' line",
+                self.url,
+            )
             for line in lines:
                 if "Zakończenie:" in line or "Rozpoczęcie:" in line:
                     continue

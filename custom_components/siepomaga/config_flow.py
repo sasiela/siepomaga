@@ -86,7 +86,8 @@ class SiePomagaOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        current = int(self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        options = self.config_entry.options or {}
+        current = int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
         schema = vol.Schema(
             {
                 vol.Optional(CONF_SCAN_INTERVAL, default=current): vol.Coerce(int),
