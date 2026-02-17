@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 from dataclasses import dataclass
@@ -89,6 +90,92 @@ def _to_float_percent(s: str | None) -> float | None:
     return float(s.replace(",", "."))
 
 
+_RE_NEXT_DATA = re.compile(
+    r'<script\s+id="__NEXT_DATA__"\s+type="application/json"\s*>(.*?)</script>',
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def _parse_next_data(text: str, url: str, slug: str) -> FundraiserData | None:
+    """Wyciągnij dane z __NEXT_DATA__ (Next.js) gdy w HTML nie ma 'zł'."""
+    m = _RE_NEXT_DATA.search(text)
+    if not m:
+        return None
+    try:
+        data = json.loads(m.group(1))
+    except (json.JSONDecodeError, TypeError):
+        return None
+    # Typowe ścieżki w Next.js: props.pageProps.* lub props.*
+    props = data.get("props") or {}
+    page_props = props.get("pageProps") if isinstance(props, dict) else {}
+    if not isinstance(page_props, dict):
+        page_props = {}
+    # Szukaj w pageProps i jednym poziomie w głąb (fundraiser, campaign, collection)
+    for node in [page_props, data]:
+        if not isinstance(node, dict):
+            continue
+        for candidate in node.values():
+            if not isinstance(candidate, dict):
+                continue
+            # Kwoty: raised/collected/amountCollected/sum, goal/target/amountGoal
+            raised = None
+            for k in ("raised", "collected", "amountCollected", "sum", "amount", "raisedAmount"):
+                v = candidate.get(k)
+                if isinstance(v, (int, float)) and v >= 0:
+                    raised = int(v)
+                    break
+                if isinstance(v, str) and v.replace(" ", "").isdigit():
+                    raised = int(v.replace(" ", ""))
+                    break
+            goal = None
+            for k in ("goal", "target", "amountGoal", "goalAmount", "total"):
+                v = candidate.get(k)
+                if isinstance(v, (int, float)) and v >= 0:
+                    goal = int(v)
+                    break
+                if isinstance(v, str) and v.replace(" ", "").isdigit():
+                    goal = int(v.replace(" ", ""))
+                    break
+            percent = None
+            for k in ("percent", "percentage", "progress"):
+                v = candidate.get(k)
+                if isinstance(v, (int, float)) and 0 <= v <= 100:
+                    percent = float(v)
+                    break
+            supporters = None
+            for k in ("supporters", "donors", "donorsCount", "backersCount", "count"):
+                v = candidate.get(k)
+                if isinstance(v, (int, float)) and v >= 0:
+                    supporters = int(v)
+                    break
+            steady = None
+            for k in ("steadySupporters", "steady_supporters", "regularSupporters"):
+                v = candidate.get(k)
+                if isinstance(v, (int, float)) and v >= 0:
+                    steady = int(v)
+                    break
+            if raised is not None or goal is not None:
+                if goal is None and raised is not None and percent is not None and percent > 0:
+                    goal = int(raised / (percent / 100.0)) if percent else None
+                if raised is None and goal is not None and percent is not None:
+                    raised = int(goal * (percent / 100.0)) if percent else None
+                missing = (goal - raised) if (goal is not None and raised is not None) else None
+                return FundraiserData(
+                    raised_pln=raised,
+                    missing_pln=missing,
+                    goal_pln=goal,
+                    percent=percent,
+                    supporters=supporters,
+                    steady_supporters=steady,
+                    start_date=None,
+                    end_date=None,
+                    title=None,
+                    url=url,
+                    slug=slug,
+                )
+    return None
+
+
 def _first_group(pattern: re.Pattern[str], text: str) -> str | None:
     m = pattern.search(text)
     if not m:
@@ -148,6 +235,7 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
                         "User-Agent": USER_AGENT,
                         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                         "Accept-Language": "pl,en;q=0.9",
+                        "Referer": "https://www.siepomaga.pl/",
                     },
                 ),
                 timeout=20.0,
@@ -167,8 +255,11 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
                 _LOGGER.warning("Request failed for %s: %s", self.url, err)
             raise UpdateFailed(f"Request failed: {err}") from err
 
-        # Strona może zwrócić consent/cookie wall zamiast treści – brak "zł" = prawdopodobnie zły HTML
+        # Strona może zwrócić szkielet (bez "zł") – najpierw spróbuj wyciągnąć dane z __NEXT_DATA__
         if "zł" not in text or len(text.strip()) < 500:
+            next_data = _parse_next_data(text, self.url, self.slug)
+            if next_data is not None:
+                return next_data
             msg = (
                 f"Odpowiedź z {self.url} wygląda na niepełną (brak 'zł' lub bardzo krótka). "
                 "Włącz 'Zapisuj błędy do logów' w opcjach po szczegóły."

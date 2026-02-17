@@ -18,7 +18,9 @@ ATTR_URL = "url"
 ATTR_SLUG = "slug"
 ATTR_TITLE = "title"
 
+# Wygląda jak przeglądarka, żeby serwer zwracał pełny HTML (nie szkielet bez "zł")
 USER_AGENT = (
-    "Mozilla/5.0 (compatible; HomeAssistant-SiePomaga/1.0; +https://github.com/sasiela/siepomaga)"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36"
 )
 
