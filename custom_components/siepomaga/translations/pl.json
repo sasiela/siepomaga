@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SiePomaga",
+        "description": "Wklej slug zbiórki albo pełny URL.\n\nPrzykład: `pawelek-pokropek` lub `https://www.siepomaga.pl/pawelek-pokropek`",
+        "data": {
+          "fundraiser": "Zbiórka"
+        }
+      }
+    },
+    "error": {
+      "invalid_fundraiser": "Nieprawidłowy slug/URL."
+    },
+    "abort": {}
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje SiePomaga",
+        "data": {
+          "scan_interval": "Częstotliwość odświeżania (sekundy)"
+        }
+      }
+    }
+  }
+}
+

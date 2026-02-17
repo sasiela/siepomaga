@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SiePomaga",
+        "description": "Paste fundraiser slug or full URL.\n\nExample: `pawelek-pokropek` or `https://www.siepomaga.pl/pawelek-pokropek`",
+        "data": {
+          "fundraiser": "Fundraiser"
+        }
+      }
+    },
+    "error": {
+      "invalid_fundraiser": "Invalid slug/URL."
+    },
+    "abort": {}
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SiePomaga options",
+        "data": {
+          "scan_interval": "Refresh interval (seconds)"
+        }
+      }
+    }
+  }
+}
+

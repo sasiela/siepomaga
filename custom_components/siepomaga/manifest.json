@@ -1,0 +1,12 @@
+{
+  "domain": "siepomaga",
+  "name": "SiePomaga",
+  "codeowners": ["@sasiela"],
+  "config_flow": true,
+  "documentation": "https://github.com/sasiela/siepomaga",
+  "issue_tracker": "https://github.com/sasiela/siepomaga/issues",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.2.0"
+}
+
