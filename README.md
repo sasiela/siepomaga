@@ -6,13 +6,46 @@ Custom integration for Home Assistant to track fundraising campaigns from [SiePo
 
 ## Installation
 
-### HACS (Custom repository)
+### 3. Dodać repo w HACS (custom repository)
 
-1. In Home Assistant: **HACS → Integrations → ⋮ → Custom repositories**
-2. Add this GitHub repository URL and select category **Integration**
-3. Search for **SiePomaga** in HACS and install
-4. Restart Home Assistant
-5. Go to **Settings → Devices & services → Add integration → SiePomaga**
+1. W Home Assistant wejdź w **HACS** (pasek boczny).
+2. Kliknij **Integracje** (Integrations).
+3. Kliknij **⋮** (trzy kropki) w prawym górnym rogu.
+4. Wybierz **Custom repositories** (Niestandardowe repozytoria).
+5. W polu **Repository** wklej:  
+   `https://github.com/sasiela/siepomaga`
+6. W **Category** wybierz **Integration**.
+7. Kliknij **Add** (Dodaj).
+
+### 4. Zainstalować integrację przez HACS
+
+1. W HACS → **Integracje** wyszukaj **SiePomaga** (lub odśwież listę).
+2. Kliknij **SiePomaga** → **Download** (Pobierz).
+3. Po zakończeniu pobierania **zrestartuj Home Assistant** (Ustawienia → System → Restart).
+4. Po restarcie: **Ustawienia → Urządzenia i usługi → Dodaj integrację**.
+5. Wyszukaj **SiePomaga**, wybierz i dodaj.
+6. Wklej slug zbiórki (np. `pawelek-pokropek`) lub pełny URL i dokończ konfigurację.
+
+---
+
+### Szybka ścieżka (skrót)
+
+1. **HACS → Integrations → ⋮ → Custom repositories** → dodaj `https://github.com/sasiela/siepomaga`, kategoria **Integration**.
+2. W HACS wyszukaj **SiePomaga** → **Download** → restart HA.
+3. **Ustawienia → Urządzenia i usługi → Dodaj integrację → SiePomaga** → wklej slug/URL zbiórki.
+
+### Ikona w HACS / na liście integracji
+
+Ikona w HACS i w HA pochodzi z repozytorium [Home Assistant Brands](https://github.com/home-assistant/brands). W tym repo są już pliki **icon.png** (256×256) i **icon@2x.png** (512×512).
+
+Aby ikona pojawiła się na liście integracji w HACS i w HA:
+
+1. Zrób fork [home-assistant/brands](https://github.com/home-assistant/brands).
+2. W forku utwórz katalog `custom_integrations/siepomaga/`.
+3. Skopiuj z tego repo pliki `icon.png` i `icon@2x.png` do `custom_integrations/siepomaga/`.
+4. Otwórz Pull Request do repozytorium `home-assistant/brands`.
+
+Po zaakceptowaniu PR ikona będzie dostępna pod `https://brands.home-assistant.io/siepomaga/icon.png` i pojawi się w HACS/HA (może być potrzebny czas na aktualizację cache).
 
 ### Manual
 
