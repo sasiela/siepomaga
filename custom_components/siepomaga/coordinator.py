@@ -90,6 +90,47 @@ def _to_float_percent(s: str | None) -> float | None:
     return float(s.replace(",", "."))
 
 
+# React Router (siepomaga.pl): dane w streamController.enqueue("...")
+def _extract_enqueue_payloads(text: str) -> list[str]:
+    """Wyciągnij stringi z wywołań .enqueue("...") w HTML."""
+    out: list[str] = []
+    i = 0
+    while True:
+        # Szukaj .enqueue(" lub enqueue("
+        idx = text.find("enqueue(", i)
+        if idx < 0:
+            break
+        idx = idx + len("enqueue(")
+        # Pomijamy białe znaki
+        while idx < len(text) and text[idx] in " \t\n\r":
+            idx += 1
+        if idx >= len(text):
+            break
+        quote = text[idx]
+        if quote not in ("'", '"'):
+            i = idx + 1
+            continue
+        idx += 1
+        start = idx
+        buf: list[str] = []
+        while idx < len(text):
+            c = text[idx]
+            if c == "\\" and idx + 1 < len(text):
+                buf.append(text[idx : idx + 2])
+                idx += 2
+                continue
+            if c == quote:
+                out.append("".join(buf))
+                idx += 1
+                break
+            buf.append(c)
+            idx += 1
+        else:
+            break
+        i = idx
+    return out
+
+
 # Next.js: atrybuty mogą być w dowolnej kolejności
 _RE_NEXT_DATA = re.compile(
     r'<script[^>]*id=["\']__NEXT_DATA__["\'][^>]*type=["\']application/json["\'][^>]*>(.*?)</script>'
@@ -149,6 +190,22 @@ def _walk_json(obj: object, url: str, slug: str) -> FundraiserData | None:
         for item in obj:
             out = _walk_json(item, url, slug)
             if out is not None: return out
+    return None
+
+
+def _parse_react_router_stream(text: str, url: str, slug: str) -> FundraiserData | None:
+    """Siepomaga.pl używa React Router – dane w streamController.enqueue("...")."""
+    for payload in _extract_enqueue_payloads(text):
+        payload = payload.strip()
+        if len(payload) < 10:
+            continue
+        try:
+            data = json.loads(payload)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        result = _walk_json(data, url, slug)
+        if result is not None:
+            return result
     return None
 
 
@@ -325,11 +382,15 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
                 text = text.encode("utf-8").decode("unicode_escape")
             except Exception:
                 pass
-        # Strona może zwrócić szkielet (bez "zł") – spróbuj __NEXT_DATA__ lub zgłoś błąd
+        # Strona może zwrócić szkielet (bez "zł") – spróbuj __NEXT_DATA__, React Router stream, lub zgłoś błąd
         if "zł" not in text or len(text.strip()) < 500:
             next_data = _parse_next_data(text, self.url, self.slug, log_errors)
             if next_data is not None:
                 return next_data
+            # siepomaga.pl: React Router, dane w enqueue("...")
+            stream_data = _parse_react_router_stream(text, self.url, self.slug)
+            if stream_data is not None:
+                return stream_data
             msg = (
                 f"Odpowiedź z {self.url} wygląda na niepełną (brak 'zł' lub bardzo krótka). "
                 "Włącz 'Zapisuj błędy do logów' w opcjach po szczegóły."
