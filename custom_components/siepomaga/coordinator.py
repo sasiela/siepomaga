@@ -14,9 +14,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_LOG_ERRORS,
     CONF_SCAN_INTERVAL,
     CONF_SLUG,
     CONF_URL,
+    DEFAULT_LOG_ERRORS,
     DEFAULT_SCAN_INTERVAL,
     USER_AGENT,
 )
@@ -120,6 +122,7 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
         self.url: str = entry.data[CONF_URL]
         options = entry.options or {}
         scan_interval = int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        self._log_errors_default = bool(options.get(CONF_LOG_ERRORS, DEFAULT_LOG_ERRORS))
 
         super().__init__(
             hass,
@@ -128,8 +131,14 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
             update_interval=timedelta(seconds=scan_interval),
         )
 
+    def _log_errors(self) -> bool:
+        """Use current option (so change takes effect without reload)."""
+        opts = self.entry.options or {}
+        return bool(opts.get(CONF_LOG_ERRORS, self._log_errors_default))
+
     async def _async_update_data(self) -> FundraiserData:
         session = async_get_clientsession(self.hass)
+        log_errors = self._log_errors()
 
         try:
             resp = await asyncio.wait_for(
@@ -139,10 +148,16 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
             resp.raise_for_status()
             text = await resp.text()
         except asyncio.TimeoutError as err:
-            _LOGGER.warning("Timeout loading %s", self.url)
+            if log_errors:
+                _LOGGER.exception("Timeout loading %s", self.url)
+            else:
+                _LOGGER.warning("Timeout loading %s", self.url)
             raise UpdateFailed(f"Timeout loading {self.url}") from err
         except Exception as err:
-            _LOGGER.warning("Request failed for %s: %s", self.url, err)
+            if log_errors:
+                _LOGGER.exception("Request failed for %s: %s", self.url, err)
+            else:
+                _LOGGER.warning("Request failed for %s: %s", self.url, err)
             raise UpdateFailed(f"Request failed: {err}") from err
 
         # Find raised + percent.

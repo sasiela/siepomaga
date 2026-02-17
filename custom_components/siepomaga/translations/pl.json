@@ -19,7 +19,8 @@
       "init": {
         "title": "Opcje SiePomaga",
         "data": {
-          "scan_interval": "Częstotliwość odświeżania (sekundy)"
+          "scan_interval": "Częstotliwość odświeżania (sekundy)",
+          "log_errors": "Zapisuj błędy do logów Home Assistant"
         }
       }
     }

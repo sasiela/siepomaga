@@ -19,7 +19,8 @@
       "init": {
         "title": "SiePomaga options",
         "data": {
-          "scan_interval": "Refresh interval (seconds)"
+          "scan_interval": "Refresh interval (seconds)",
+          "log_errors": "Log errors to Home Assistant log"
         }
       }
     }

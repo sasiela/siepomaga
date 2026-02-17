@@ -12,9 +12,11 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_FUNDRAISER,
+    CONF_LOG_ERRORS,
     CONF_SCAN_INTERVAL,
     CONF_SLUG,
     CONF_URL,
+    DEFAULT_LOG_ERRORS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -63,7 +65,10 @@ class SiePomagaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=f"SiePomaga: {slug}",
                     data={CONF_SLUG: slug, CONF_URL: url},
-                    options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+                    options={
+                        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                        CONF_LOG_ERRORS: DEFAULT_LOG_ERRORS,
+                    },
                 )
 
         schema = vol.Schema({vol.Required(CONF_FUNDRAISER): str})
@@ -85,10 +90,12 @@ class SiePomagaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options or {}
-        current = int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        current_interval = int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        current_log_errors = bool(options.get(CONF_LOG_ERRORS, DEFAULT_LOG_ERRORS))
         schema = vol.Schema(
             {
-                vol.Optional(CONF_SCAN_INTERVAL, default=current): vol.Coerce(int),
+                vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.Coerce(int),
+                vol.Optional(CONF_LOG_ERRORS, default=current_log_errors): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
