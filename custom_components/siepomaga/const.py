@@ -18,5 +18,7 @@ ATTR_URL = "url"
 ATTR_SLUG = "slug"
 ATTR_TITLE = "title"
 
-USER_AGENT = "Home Assistant (SiePomaga integration)"
+USER_AGENT = (
+    "Mozilla/5.0 (compatible; HomeAssistant-SiePomaga/1.0; +https://github.com/sasiela/siepomaga)"
+)
 

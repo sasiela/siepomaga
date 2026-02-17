@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "SiePomaga",
-        "description": "Paste fundraiser slug or full URL.\n\nExample: `pawelek-pokropek` or `https://www.siepomaga.pl/pawelek-pokropek`",
+        "description": "Paste fundraiser slug or full URL.\n\nExample: `pawelek-pokropek` (or full URL from siepomaga.pl)",
         "data": {
           "fundraiser": "Fundraiser"
         }

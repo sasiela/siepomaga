@@ -142,11 +142,18 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
 
         try:
             resp = await asyncio.wait_for(
-                session.get(self.url, headers={"User-Agent": USER_AGENT}),
+                session.get(
+                    self.url,
+                    headers={
+                        "User-Agent": USER_AGENT,
+                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                        "Accept-Language": "pl,en;q=0.9",
+                    },
+                ),
                 timeout=20.0,
             )
             resp.raise_for_status()
-            text = await resp.text()
+            text = await resp.text(encoding="utf-8", errors="replace")
         except asyncio.TimeoutError as err:
             if log_errors:
                 _LOGGER.exception("Timeout loading %s", self.url)
@@ -159,6 +166,21 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
             else:
                 _LOGGER.warning("Request failed for %s: %s", self.url, err)
             raise UpdateFailed(f"Request failed: {err}") from err
+
+        # Strona może zwrócić consent/cookie wall zamiast treści – brak "zł" = prawdopodobnie zły HTML
+        if "zł" not in text or len(text.strip()) < 500:
+            msg = (
+                f"Odpowiedź z {self.url} wygląda na niepełną (brak 'zł' lub bardzo krótka). "
+                "Włącz 'Loguj błędy' w opcjach i sprawdź logi."
+            )
+            if log_errors:
+                _LOGGER.error(
+                    "%s Długość: %d, początek: %s",
+                    msg,
+                    len(text),
+                    text[:400].replace("\n", " "),
+                )
+            raise UpdateFailed(msg)
 
         # Find raised + percent.
         # Active fundraisers usually contain: "<amount> zł(<percent>%)"
