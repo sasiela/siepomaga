@@ -4,8 +4,8 @@
   "codeowners": ["@sasiela"],
   "config_flow": true,
   "documentation": "https://github.com/sasiela/siepomaga",
-  "issue_tracker": "https://github.com/sasiela/siepomaga/issues",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/sasiela/siepomaga/issues",
   "requirements": [],
-  "version": "0.2.6"
+  "version": "0.2.7"
 }
