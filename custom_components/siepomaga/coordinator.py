@@ -171,15 +171,11 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
         if "zł" not in text or len(text.strip()) < 500:
             msg = (
                 f"Odpowiedź z {self.url} wygląda na niepełną (brak 'zł' lub bardzo krótka). "
-                "Włącz 'Loguj błędy' w opcjach i sprawdź logi."
+                "Włącz 'Zapisuj błędy do logów' w opcjach po szczegóły."
             )
+            _LOGGER.warning("%s Długość odpowiedzi: %d znaków.", msg, len(text))
             if log_errors:
-                _LOGGER.error(
-                    "%s Długość: %d, początek: %s",
-                    msg,
-                    len(text),
-                    text[:400].replace("\n", " "),
-                )
+                _LOGGER.error("Początek odpowiedzi: %s", text[:400].replace("\n", " "))
             raise UpdateFailed(msg)
 
         # Find raised + percent.
