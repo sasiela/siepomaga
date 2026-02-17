@@ -18,6 +18,9 @@ ATTR_URL = "url"
 ATTR_SLUG = "slug"
 ATTR_TITLE = "title"
 
+# API siepomaga.pl – dane zbiórki w JSON (główne źródło)
+API_PERMALINKS_URL = "https://www.siepomaga.pl/api/donor/web/v2/permalinks"
+
 # Wygląda jak przeglądarka, żeby serwer zwracał pełny HTML (nie szkielet bez "zł")
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
