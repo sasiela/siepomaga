@@ -34,6 +34,12 @@ Custom integration for Home Assistant to track fundraising campaigns from [SiePo
 2. W HACS wyszukaj **SiePomaga** → **Download** → restart HA.
 3. **Ustawienia → Urządzenia i usługi → Dodaj integrację → SiePomaga** → wklej slug/URL zbiórki.
 
+### Wymagania HACS (żeby walidacja przechodziła)
+
+- **Topics repozytorium:** W ustawieniach repo na GitHub (Settings → General → Topics) dodaj np. `home-assistant`, `hacs`, `hacs-integration`.
+- **Brands (ikona):** Integracja musi być dodana do [home-assistant/brands](https://github.com/home-assistant/brands) — instrukcja poniżej („Ikona w HACS”).
+- **Release:** W GitHub → Releases utwórz co najmniej jeden release (np. v0.2.5), nie tylko tag.
+
 ### Ikona w HACS / na liście integracji (Home Assistant Brands)
 
 Ikona w HACS i w HA jest serwowana z repozytorium [home-assistant/brands](https://github.com/home-assistant/brands). W **tym** repo (siepomaga) masz już pliki **icon.png** (256×256) i **icon@2x.png** (512×512). Żeby ikona pojawiła się w interfejsie, musisz dodać je do repozytorium Brands — krok po kroku:
