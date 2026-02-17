@@ -63,6 +63,7 @@ class SiePomagaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=f"SiePomaga: {slug}",
                     data={CONF_SLUG: slug, CONF_URL: url},
+                    options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
                 )
 
         schema = vol.Schema({vol.Required(CONF_FUNDRAISER): str})
@@ -75,11 +76,8 @@ class SiePomagaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return SiePomagaOptionsFlowHandler(config_entry)
 
 
-class SiePomagaOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
+class SiePomagaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+    """Handle options (OptionsFlowWithConfigEntry for wider HA version compatibility)."""
 
     async def async_step_init(self, user_input: dict | None = None) -> FlowResult:
         """Manage the options."""

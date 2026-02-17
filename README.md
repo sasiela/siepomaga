@@ -134,15 +134,21 @@ Additional sensors:
 
 ### Gdzie są ustawienia pluginu (opcje)
 
-Możesz zmienić **interwał odświeżania** (np. co 300 sekund) w opcjach integracji. Żeby otworzyć okno ustawień:
+Możesz zmienić **interwał odświeżania** (np. co 300 sekund) w opcjach integracji.
 
-1. Wejdź w **Ustawienia** → **Urządzenia i usługi**.
-2. Znajdź na liście **SiePomaga** (możesz wyszukać po „SiePomaga”).
-3. Kliknij **w wiersz z wpisem** (np. **„SiePomaga: pawelek-pokropek”**), nie w samą nazwę integracji u góry.
-4. Otworzy się strona urządzenia; u góry lub w menu (⋮) wybierz **„Konfiguruj”** / **„Configure”**.
-5. Pojawi się okno z polem **„Częstotliwość odświeżania (sekundy)”** — wpisz np. `300` i zapisz.
+**Zaktualizuj integrację** (HACS → SiePomaga → Aktualizuj) i **zrestartuj Home Assistant**. W nowszej wersji opcje są rejestrowane inaczej, dzięki czemu przycisk **„Konfiguruj”** powinien się pojawić.
 
-Jeśli nie widzisz **„Konfiguruj”**: na stronie integracji (po kliknięciu „SiePomaga”) spróbuj kliknąć **ikony zębatki** przy wpisie albo **trzy kropki (⋮)** i wybrać opcję konfiguracji.
+Gdzie szukać:
+
+1. **Ustawienia** → **Urządzenia i usługi**.
+2. Znajdź **SiePomaga** (wyszukaj „SiePomaga” w górnym polu).
+3. Kliknij **w nazwę wpisu** (np. **„SiePomaga: pawelek-pokropek”**) — otworzy się strona urządzenia.
+4. Na stronie urządzenia szukaj przycisku **„Konfiguruj”** (lub **„Configure”**) albo **ikony zębatki** / **trzy kropki (⋮)** → **Konfiguruj**.
+5. Otworzy się okno z polem **„Częstotliwość odświeżania (sekundy)”** (domyślnie 300) — zmień i zapisz.
+
+**Jeśli nadal nie ma „Konfiguruj”:** w **Urządzenia i usługi** kliknij **trzy kropki (⋮)** przy **karcie integracji SiePomaga** (nie przy pojedynczym wpisie) i zobacz, czy w menu jest **„Konfiguruj”** lub **„Opcje”**.
+
+**Obejście:** usuń integrację (⋮ → Usuń) i dodaj ją ponownie (Dodaj integrację → SiePomaga → wklej slug). Domyślny interwał to 300 s; zmiana będzie możliwa po pojawieniu się opcji w Twojej wersji HA.
 
 ## Development notes
 
