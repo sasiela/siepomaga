@@ -33,7 +33,7 @@ SENSOR_DESCRIPTIONS: tuple[SiePomagaSensorEntityDescription, ...] = (
         icon="mdi:hand-coin",
         native_unit_of_measurement="PLN",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SiePomagaSensorEntityDescription(
         key="missing",
