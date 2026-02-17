@@ -90,21 +90,85 @@ def _to_float_percent(s: str | None) -> float | None:
     return float(s.replace(",", "."))
 
 
+# Next.js: atrybuty mogą być w dowolnej kolejności
 _RE_NEXT_DATA = re.compile(
-    r'<script\s+id="__NEXT_DATA__"\s+type="application/json"\s*>(.*?)</script>',
+    r'<script[^>]*id=["\']__NEXT_DATA__["\'][^>]*type=["\']application/json["\'][^>]*>(.*?)</script>'
+    r'|<script[^>]*type=["\']application/json["\'][^>]*id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
     re.DOTALL | re.IGNORECASE,
 )
 
 
-def _parse_next_data(text: str, url: str, slug: str) -> FundraiserData | None:
+def _to_num(v: object) -> int | None:
+    if v is None: return None
+    if isinstance(v, (int, float)) and v >= 0: return int(v)
+    if isinstance(v, str) and v.replace(" ", "").replace("\u00a0", "").isdigit():
+        return int(v.replace(" ", "").replace("\u00a0", ""))
+    return None
+
+
+def _extract_from_dict(c: dict, url: str, slug: str) -> FundraiserData | None:
+    """Jeśli dict ma raised/goal-like pola, zwróć FundraiserData."""
+    raised = None
+    for k in ("raised", "collected", "amountCollected", "sum", "amount", "raisedAmount", "totalAmount"):
+        raised = _to_num(c.get(k))
+        if raised is not None: break
+    goal = None
+    for k in ("goal", "target", "amountGoal", "goalAmount", "total", "requiredAmount"):
+        goal = _to_num(c.get(k))
+        if goal is not None: break
+    if raised is None and goal is None:
+        return None
+    percent = None
+    for k in ("percent", "percentage", "progress", "progressPercent"):
+        v = c.get(k)
+        if isinstance(v, (int, float)) and 0 <= v <= 100:
+            percent = float(v)
+            break
+    supporters = None
+    for k in ("supporters", "donors", "donorsCount", "supportersCount"):
+        supporters = _to_num(c.get(k))
+        if supporters is not None: break
+    steady = None
+    for k in ("steadySupporters", "steady_supporters", "permanentSupportersCount"):
+        steady = _to_num(c.get(k))
+        if steady is not None: break
+    if goal is None and raised and percent: goal = int(raised / (percent / 100.0))
+    if raised is None and goal and percent is not None: raised = int(goal * (percent / 100.0))
+    missing = (goal - raised) if (goal is not None and raised is not None) else None
+    return FundraiserData(raised_pln=raised, missing_pln=missing, goal_pln=goal, percent=percent, supporters=supporters, steady_supporters=steady, start_date=None, end_date=None, title=None, url=url, slug=slug)
+
+
+def _walk_json(obj: object, url: str, slug: str) -> FundraiserData | None:
+    if isinstance(obj, dict):
+        out = _extract_from_dict(obj, url, slug)
+        if out is not None: return out
+        for v in obj.values():
+            out = _walk_json(v, url, slug)
+            if out is not None: return out
+    elif isinstance(obj, list):
+        for item in obj:
+            out = _walk_json(item, url, slug)
+            if out is not None: return out
+    return None
+
+
+def _parse_next_data(text: str, url: str, slug: str, log_errors: bool = False) -> FundraiserData | None:
     """Wyciągnij dane z __NEXT_DATA__ (Next.js) gdy w HTML nie ma 'zł'."""
     m = _RE_NEXT_DATA.search(text)
     if not m:
         return None
+    json_str = (m.group(1) or m.group(2) or "").strip()
+    if not json_str:
+        return None
     try:
-        data = json.loads(m.group(1))
+        data = json.loads(json_str)
     except (json.JSONDecodeError, TypeError):
         return None
+    result = _walk_json(data, url, slug)
+    if result is not None:
+        return result
+    if log_errors and isinstance(data, dict):
+        _LOGGER.info("SiePomaga __NEXT_DATA__ (brak dopasowania): keys=%s", list(data.keys())[:20])
     # Typowe ścieżki w Next.js: props.pageProps.* lub props.*
     props = data.get("props") or {}
     page_props = props.get("pageProps") if isinstance(props, dict) else {}
@@ -255,9 +319,15 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
                 _LOGGER.warning("Request failed for %s: %s", self.url, err)
             raise UpdateFailed(f"Request failed: {err}") from err
 
-        # Strona może zwrócić szkielet (bez "zł") – najpierw spróbuj wyciągnąć dane z __NEXT_DATA__
+        # W JSON "zł" bywa jako \u017a\u0142 – zdekoduj i sprawdź ponownie
+        if "zł" not in text and "\\u017a" in text and "\\u0142" in text:
+            try:
+                text = text.encode("utf-8").decode("unicode_escape")
+            except Exception:
+                pass
+        # Strona może zwrócić szkielet (bez "zł") – spróbuj __NEXT_DATA__ lub zgłoś błąd
         if "zł" not in text or len(text.strip()) < 500:
-            next_data = _parse_next_data(text, self.url, self.slug)
+            next_data = _parse_next_data(text, self.url, self.slug, log_errors)
             if next_data is not None:
                 return next_data
             msg = (
