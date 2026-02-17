@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date as date_type
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -139,8 +138,7 @@ class SiePomagaFundraiserSensor(CoordinatorEntity[SiePomagaCoordinator], SensorE
         if data is None:
             return None
         value = getattr(data, self._data_attr)
-        if isinstance(value, date_type):
-            return value.isoformat()
+        # Dla device_class DATE HA oczekuje obiektu date, nie stringa (sam wywoła .isoformat())
         return value
 
     @property
