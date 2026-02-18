@@ -52,7 +52,7 @@ The integration creates 3 sensors:
 Additional sensors:
 
 - `Cel` (PLN) — calculated as `zebrano + brakuje` (when both are present)
-- `Wpływy dzienne` (PLN) — kwota wpływu **dziś**; atrybut `wpływy_na_dzień` zawiera historię (lista `{date, amount}` z ostatnich ~31 dni) do wykresu słupkowego
+- `Wpływy dzienne` (PLN) — kwota wpływu **dziś**; atrybut `wpływy_na_dzień` zawiera historię (lista `{date, amount}` z ostatnich ~31 dni) do wykresu słupkowego. Stan „dziś” i historia dzienna działają dopiero po pierwszym pełnym dniu (od następnego dnia po instalacji).
 - `Wspierających` (osób)
 - `Stałych pomagaczy` (osób)
 - `Rozpoczęcie` (date)

@@ -122,13 +122,19 @@ def _parse_api_response(data: object, url: str, slug: str) -> FundraiserData | N
 def _compute_daily_donations(
     totals: dict[str, dict[str, int]], slug: str, current_raised: int | None
 ) -> tuple[list[dict[str, int | str]], int]:
-    """Dla danego sluga: lista {date, amount} z ostatnich dni + kwota wpływu dziś (PLN)."""
+    """Dla danego sluga: lista {date, amount} z ostatnich dni + kwota wpływu dziś (PLN).
+    Kwota „dziś” jest podawana tylko gdy mamy zapisany total z wczoraj (po pełnym dniu)."""
     if current_raised is None:
         return [], 0
     by_slug = totals.get(slug) or {}
     today_str = date.today().isoformat()
     yesterday_str = (date.today() - timedelta(days=1)).isoformat()
-    today_pln = current_raised - by_slug.get(yesterday_str, 0)
+    # Dopiero gdy mamy wczorajszy total, liczymy wpływ dziś; inaczej 0 (np. pierwszy dzień po instalacji)
+    today_pln = (
+        current_raised - by_slug[yesterday_str]
+        if yesterday_str in by_slug
+        else 0
+    )
 
     sorted_dates = sorted(by_slug.keys(), reverse=True)
     out: list[dict[str, int | str]] = []
