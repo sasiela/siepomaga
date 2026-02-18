@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -24,6 +25,10 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+STORAGE_KEY = "siepomaga_daily_totals"
+STORAGE_VERSION = 1
+MAX_DAYS_STORED = 90
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -114,6 +119,37 @@ def _parse_api_response(data: object, url: str, slug: str) -> FundraiserData | N
     )
 
 
+def _compute_daily_donations(
+    totals: dict[str, dict[str, int]], slug: str, current_raised: int | None
+) -> tuple[list[dict[str, int | str]], int]:
+    """Dla danego sluga: lista {date, amount} z ostatnich dni + kwota wpływu dziś (PLN)."""
+    if current_raised is None:
+        return [], 0
+    by_slug = totals.get(slug) or {}
+    today_str = date.today().isoformat()
+    yesterday_str = (date.today() - timedelta(days=1)).isoformat()
+    today_pln = current_raised - by_slug.get(yesterday_str, 0)
+
+    sorted_dates = sorted(by_slug.keys(), reverse=True)
+    out: list[dict[str, int | str]] = []
+    for d in sorted_dates:
+        if d == today_str:
+            continue
+        try:
+            d_date = datetime.strptime(d, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            continue
+        raised_d = by_slug[d]
+        prev_d = (d_date - timedelta(days=1)).isoformat()
+        prev_val = by_slug.get(prev_d, 0)
+        amount = raised_d - prev_val
+        out.append({"date": d, "amount": amount})
+        if len(out) >= 31:
+            break
+    out.reverse()
+    return out, today_pln
+
+
 class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
     """Fetch fundraiser data from siepomaga.pl API."""
 
@@ -124,6 +160,9 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
         options = entry.options or {}
         scan_interval = int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
         self._log_errors_default = bool(options.get(CONF_LOG_ERRORS, DEFAULT_LOG_ERRORS))
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self.daily_donations_list: list[dict[str, int | str]] = []
+        self.today_donation_pln: int = 0
 
         super().__init__(
             hass,
@@ -135,6 +174,32 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
     def _log_errors(self) -> bool:
         opts = self.entry.options or {}
         return bool(opts.get(CONF_LOG_ERRORS, self._log_errors_default))
+
+    async def _update_daily_totals(self, raised_pln: int | None) -> None:
+        """Zapisz dzisiejszy total i oblicz wpływy dzienne do wykresu słupkowego."""
+        if raised_pln is None:
+            return
+        raw = await self._store.async_load()
+        if not isinstance(raw, dict):
+            raw = {}
+        slugs = raw.get("slugs")
+        if not isinstance(slugs, dict):
+            slugs = {}
+        by_slug = slugs.get(self.slug)
+        if not isinstance(by_slug, dict):
+            by_slug = {}
+        today_str = date.today().isoformat()
+        by_slug[today_str] = raised_pln
+        sorted_dates = sorted(by_slug.keys())
+        if len(sorted_dates) > MAX_DAYS_STORED:
+            to_keep = set(sorted_dates[-MAX_DAYS_STORED:])
+            by_slug = {k: v for k, v in by_slug.items() if k in to_keep}
+        slugs[self.slug] = by_slug
+        raw["slugs"] = slugs
+        await self._store.async_save(raw)
+        self.daily_donations_list, self.today_donation_pln = _compute_daily_donations(
+            slugs, self.slug, raised_pln
+        )
 
     async def _async_update_data(self) -> FundraiserData:
         session = async_get_clientsession(self.hass)
@@ -158,6 +223,7 @@ class SiePomagaCoordinator(DataUpdateCoordinator[FundraiserData]):
             data = await resp.json()
             result = _parse_api_response(data, self.url, self.slug)
             if result is not None:
+                await self._update_daily_totals(result.raised_pln)
                 return result
         except asyncio.TimeoutError as err:
             msg = f"Timeout ładowania API: {api_url}"

@@ -19,6 +19,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ATTR_SLUG, ATTR_TITLE, ATTR_URL, DOMAIN
 from .coordinator import SiePomagaCoordinator
 
+ATTR_DAILY_DONATIONS = "wpływy_na_dzień"
+
 
 @dataclass(frozen=True, kw_only=True)
 class SiePomagaSensorEntityDescription(SensorEntityDescription):
@@ -81,6 +83,14 @@ SENSOR_DESCRIPTIONS: tuple[SiePomagaSensorEntityDescription, ...] = (
         icon="mdi:calendar-end",
         device_class=SensorDeviceClass.DATE,
     ),
+    SiePomagaSensorEntityDescription(
+        key="daily_inflow",
+        name="Wpływy dzienne",
+        icon="mdi:chart-bar",
+        native_unit_of_measurement="PLN",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 
@@ -101,6 +111,7 @@ async def async_setup_entry(
             SiePomagaFundraiserSensor(coordinator, entry, SENSOR_DESCRIPTIONS[5], "steady_supporters"),
             SiePomagaFundraiserSensor(coordinator, entry, SENSOR_DESCRIPTIONS[6], "start_date"),
             SiePomagaFundraiserSensor(coordinator, entry, SENSOR_DESCRIPTIONS[7], "end_date"),
+            SiePomagaDailyInflowSensor(coordinator, entry),
         ]
     )
 
@@ -151,4 +162,43 @@ class SiePomagaFundraiserSensor(CoordinatorEntity[SiePomagaCoordinator], SensorE
             ATTR_SLUG: data.slug,
             ATTR_TITLE: data.title,
         }
+
+
+class SiePomagaDailyInflowSensor(CoordinatorEntity[SiePomagaCoordinator], SensorEntity):
+    """Sensor: kwota wpływu dziś + atrybut z historią dzienną do wykresu słupkowego."""
+
+    _attr_has_entity_name = True
+    entity_description = SENSOR_DESCRIPTIONS[8]
+
+    def __init__(
+        self,
+        coordinator: SiePomagaCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._entry = entry
+        self._attr_unique_id = f"{entry.entry_id}_daily_inflow"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.slug)},
+            name=f"SiePomaga {self.coordinator.slug}",
+            configuration_url=self.coordinator.url,
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.today_donation_pln
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        data = self.coordinator.data
+        base = {
+            ATTR_URL: data.url if data else None,
+            ATTR_SLUG: self.coordinator.slug,
+            ATTR_TITLE: data.title if data else None,
+        }
+        base[ATTR_DAILY_DONATIONS] = self.coordinator.daily_donations_list
+        return base
 
