@@ -83,6 +83,10 @@ Gdzie szukać:
 - Jeśli jest **„Odpowiedź … wygląda na niepełną (brak 'zł' …)”** — serwer zwrócił inną stronę (np. cookie consent). W logu zobaczysz początek odpowiedzi; w takiej sytuacji integracja nie może wyciągnąć danych z takiej strony.
 - Upewnij się, że HA ma dostęp do internetu i że adres `https://www.siepomaga.pl/` nie jest blokowany (firewall, pi-hole itd.).
 
+## Ikona w HACS / HA (od 2026.3)
+
+Od Home Assistant 2026.3.0 integracje custom mogą dostarczać własne ikony (nie trzeba ich już dodawać do repozytorium [home-assistant/brands](https://github.com/home-assistant/brands)). W folderze integracji są pliki `icon.png` (256×256) i `icon@2x.png` (512×512) — HA używa ich automatycznie. Więcej: [Brands proxy API](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api).
+
 ## Development notes
 
 - Domain: `siepomaga`
