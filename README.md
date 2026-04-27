@@ -24,7 +24,7 @@ Custom integration for Home Assistant to track fundraising campaigns from [SiePo
 3. Po zakończeniu pobierania **zrestartuj Home Assistant** (Ustawienia → System → Restart).
 4. Po restarcie: **Ustawienia → Urządzenia i usługi → Dodaj integrację**.
 5. Wyszukaj **SiePomaga**, wybierz i dodaj.
-6. Wklej slug zbiórki (np. `pawelek-pokropek`) lub pełny URL i dokończ konfigurację.
+6. Wklej slug zbiórki / skarbonki (np. `pawelek-pokropek`) lub pełny URL i dokończ konfigurację.
 
 ---
 
@@ -41,7 +41,7 @@ Custom integration for Home Assistant to track fundraising campaigns from [SiePo
 
 ## Configuration
 
-Configured via UI (config flow). Paste a fundraiser slug (e.g. `pawelek-pokropek`) or full URL (e.g. `https://www.siepomaga.pl/pawelek-pokropek`).
+Configured via UI (config flow). Paste a fundraiser or money box slug (e.g. `pawelek-pokropek`) or full URL (e.g. `https://www.siepomaga.pl/pawelek-pokropek` or `https://www.siepomaga.pl/latwogang`).
 
 The integration creates 3 sensors:
 

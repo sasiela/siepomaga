@@ -55,14 +55,31 @@ def _parse_api_response(data: object, url: str, slug: str) -> FundraiserData | N
     target = data.get("data", {}).get("target") if isinstance(data.get("data"), dict) else None
     if not isinstance(target, dict):
         return None
+
+    source: dict | None = None
+    steady_source: dict | None = None
+
+    fundraise = target.get("fundraise")
+    if isinstance(fundraise, dict):
+        source = fundraise
+        nested_target = fundraise.get("target")
+        if isinstance(nested_target, dict):
+            organization = nested_target.get("organization")
+            if isinstance(organization, dict):
+                steady_source = organization
+
     needy = target.get("needy")
-    if not isinstance(needy, dict):
+    if source is None and isinstance(needy, dict):
+        cause = needy.get("cause")
+        if isinstance(cause, dict):
+            source = cause
+            steady_source = needy
+
+    if source is None:
         return None
-    cause = needy.get("cause")
-    if not isinstance(cause, dict):
-        return None
-    funds_current = cause.get("funds_current")
-    funds_aim = cause.get("funds_aim")
+
+    funds_current = source.get("funds_current")
+    funds_aim = source.get("funds_aim")
     if funds_current is None and funds_aim is None:
         return None
     try:
@@ -79,31 +96,31 @@ def _parse_api_response(data: object, url: str, slug: str) -> FundraiserData | N
     if goal and goal > 0 and raised is not None:
         percent = round(100.0 * raised / goal, 2)
     missing = (goal - raised) if (goal is not None and raised is not None) else None
-    donors_count = cause.get("donors_count")
+    donors_count = source.get("donors_count")
     try:
         supporters = int(donors_count) if donors_count is not None else None
     except (TypeError, ValueError):
         supporters = None
-    constant = needy.get("constant_helps_count")
+    constant = steady_source.get("constant_helps_count") if steady_source else None
     try:
         steady_supporters = int(constant) if constant is not None else None
     except (TypeError, ValueError):
         steady_supporters = None
     start_date = None
-    accepted = cause.get("accepted_at")
+    accepted = source.get("accepted_at")
     if isinstance(accepted, str) and len(accepted) >= 10:
         try:
             start_date = datetime.fromisoformat(accepted.replace("Z", "+00:00")[:19]).date()
         except (ValueError, TypeError):
             pass
     end_date = None
-    end_str = cause.get("end_date")
+    end_str = source.get("end_date")
     if isinstance(end_str, str) and len(end_str) >= 10:
         try:
             end_date = datetime.fromisoformat(end_str.replace("Z", "+00:00")[:19]).date()
         except (ValueError, TypeError):
             pass
-    title = cause.get("title") if isinstance(cause.get("title"), str) else None
+    title = source.get("title") if isinstance(source.get("title"), str) else None
     return FundraiserData(
         raised_pln=raised,
         missing_pln=missing,

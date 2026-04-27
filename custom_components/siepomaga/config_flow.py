@@ -22,7 +22,7 @@ from .const import (
 )
 
 _URL_RE = re.compile(
-    r"^https?://(www\.)?siepomaga\.pl/([a-z0-9-]+)/*$",
+    r"^https?://(www\.)?siepomaga\.pl/(?:[a-z]{2}/)?([a-z0-9-]+)/*$",
     re.IGNORECASE,
 )
 _SLUG_RE = re.compile(r"^[a-z0-9-]+$", re.IGNORECASE)

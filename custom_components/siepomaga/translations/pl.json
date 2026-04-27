@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "title": "SiePomaga",
-        "description": "Wklej slug zbiórki albo pełny URL.\n\nPrzykład: `pawelek-pokropek` lub pełny URL z siepomaga.pl",
+        "description": "Wklej slug zbiórki / skarbonki albo pełny URL.\n\nPrzykład: `pawelek-pokropek`, `latwogang` lub pełny URL z siepomaga.pl",
         "data": {
-          "fundraiser": "Zbiórka"
+          "fundraiser": "Zbiórka / skarbonka"
         }
       }
     },
